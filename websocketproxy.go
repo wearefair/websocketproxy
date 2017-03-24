@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -56,7 +57,7 @@ func NewProxy(target *url.URL) *WebsocketProxy {
 		// Shallow copy
 		u := *target
 		u.Fragment = r.URL.Fragment
-		u.Path = r.URL.Path
+		u.Path = path.Join(u.Path, r.URL.Path)
 		u.RawQuery = r.URL.RawQuery
 		return &u
 	}
@@ -163,5 +164,12 @@ func (w *WebsocketProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// Start our proxy now, everything is ready...
 	go cp(connBackend.UnderlyingConn(), connPub.UnderlyingConn())
 	go cp(connPub.UnderlyingConn(), connBackend.UnderlyingConn())
-	<-errc
+
+	// Return when we get an error, or the context has expired.
+	select {
+	case <-errc:
+		return
+	case <-req.Context().Done():
+		return
+	}
 }
