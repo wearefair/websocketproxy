@@ -196,4 +196,5 @@ var hopHeaders = []string{
 	"Upgrade",
 	"Sec-Websocket-Key",
 	"Sec-Websocket-Version",
+	"Sec-Websocket-Extensions",
 }
